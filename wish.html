@@ -6,6 +6,7 @@
     <title>Крутки — Wish Simulator</title>
     <link rel="stylesheet" href="css/style.css">
     <meta name="screen-orientation" content="landscape">
+    <script src="js/rotate.js"></script>
 </head>
 <body>
     <div class="stars-container">
@@ -254,28 +255,8 @@
             updateUI();
         })();
         
-        // Принудительный ландшафтный режим на мобильных
-        function lockLandscape() {
-            if (window.innerWidth < 700 && window.innerHeight > window.innerWidth) {
-                // Показываем подсказку
-                document.getElementById('rotateHint').style.display = 'flex';
-                document.querySelector('.wish-layout').style.display = 'none';
-            } else {
-                document.getElementById('rotateHint').style.display = 'none';
-                document.querySelector('.wish-layout').style.display = 'flex';
-            }
-        }
-
-        window.addEventListener('resize', lockLandscape);
-        window.addEventListener('orientationchange', lockLandscape);
-        lockLandscape();
         
     </script>
-    
-    <div class="rotate-hint" id="rotateHint">
-    <span class="rotate-icon">↻</span>
-    <p>ПОВЕРНИТЕ</p>
-    <p>ТЕЛЕФОН</p>
     
 </div>
 </body>
