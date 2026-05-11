@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Инвентарь — Wish Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="stars-container">
+        <span class="star" style="top: 5%; left: 10%;"></span>
+        <span class="star" style="top: 15%; left: 85%; animation-delay: 0.7s;"></span>
+        <span class="star" style="top: 50%; left: 90%; animation-delay: 1.2s;"></span>
+        <span class="star" style="top: 80%; left: 20%; animation-delay: 1.8s;"></span>
+        <span class="star" style="top: 35%; left: 40%; animation-delay: 2.2s;"></span>
+    </div>
+
+    <main class="main-menu">
+        <div class="title-block">
+            <h1 class="title" style="font-size: clamp(32px, 5vh, 48px);">
+                <span class="title-icon">◇</span> ИНВЕНТАРЬ <span class="title-icon">◇</span>
+            </h1>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <img src="assets/ui/star-gold.png" alt="5★" class="stat-star">
+                <span id="stat5">0</span>
+            </div>
+            <div class="stat-item">
+                <img src="assets/ui/star-purple.png" alt="4★" class="stat-star">
+                <span id="stat4">0</span>
+            </div>
+            <div class="stat-item">
+                <img src="assets/ui/star-gray.png" alt="3★" class="stat-star">
+                <span id="stat3">0</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">всего</span>
+                <span id="statTotal">0</span>
+            </div>
+        </div>
+
+        <div class="inventory-list" id="inventoryList">
+            <div class="empty-state">
+                <span class="empty-icon">◇</span>
+                <p>ИНВЕНТАРЬ ПУСТ</p>
+                <p class="empty-hint">Сделайте крутку на странице круток</p>
+            </div>
+        </div>
+
+        <a href="index.html" class="menu-btn" style="width: min(240px, 70vw);">
+            <span class="btn-icon">←</span>
+            НАЗАД
+        </a>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script>
+        (function() {
+            const stats = Storage.getStats();
+            document.getElementById('stat5').textContent = stats.fiveStar;
+            document.getElementById('stat4').textContent = stats.fourStar;
+            document.getElementById('stat3').textContent = stats.threeStar;
+            document.getElementById('statTotal').textContent = stats.total;
+
+            const inventory = Storage.getInventory();
+            const listEl = document.getElementById('inventoryList');
+
+            if (inventory.length > 0) {
+                listEl.innerHTML = '';
+                inventory.reverse().forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `inventory-card rarity-${item.rarity}`;
+                    card.innerHTML = `
+                        <span class="rarity-stars">${'★'.repeat(item.rarity)}</span>
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-date">${new Date(item.date).toLocaleDateString()}</span>
+                    `;
+                    listEl.appendChild(card);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

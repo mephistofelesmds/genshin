@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>История — Wish Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="stars-container">
+        <span class="star" style="top: 5%; left: 10%;"></span>
+        <span class="star" style="top: 15%; left: 85%; animation-delay: 0.7s;"></span>
+        <span class="star" style="top: 50%; left: 90%; animation-delay: 1.2s;"></span>
+        <span class="star" style="top: 80%; left: 20%; animation-delay: 1.8s;"></span>
+        <span class="star" style="top: 35%; left: 40%; animation-delay: 2.2s;"></span>
+    </div>
+
+    <main class="main-menu">
+        <div class="title-block">
+            <h1 class="title" style="font-size: clamp(28px, 5vh, 42px);">
+                <span class="title-icon">◈</span> ИСТОРИЯ <span class="title-icon">◈</span>
+            </h1>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="history-filters">
+            <button class="filter-btn active" data-filter="all">ВСЕ</button>
+            <button class="filter-btn" data-filter="5">5★</button>
+            <button class="filter-btn" data-filter="4">4★</button>
+            <button class="filter-btn" data-filter="3">3★</button>
+        </div>
+
+        <!-- Пагинация -->
+        <div class="history-pagination" id="pagination">
+            <span class="page-info" id="pageInfo">1–0 из 0</span>
+        </div>
+
+        <!-- Список истории -->
+        <div class="history-list" id="historyList">
+            <div class="empty-state">
+                <span class="empty-icon">◈</span>
+                <p>ИСТОРИЯ ПУСТА</p>
+                <p class="empty-hint">Сделайте крутку на странице круток</p>
+            </div>
+        </div>
+
+        <!-- Управление пагинацией -->
+        <div class="history-nav">
+            <button class="page-nav-btn" id="prevPage" disabled>← НАЗАД</button>
+            <button class="page-nav-btn" id="nextPage" disabled>ВПЕРЁД →</button>
+        </div>
+
+        <a href="index.html" class="menu-btn" style="width: min(220px, 60vw); margin-top: 0;">
+            <span class="btn-icon">←</span>
+            НАЗАД
+        </a>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script>
+        (function() {
+            const historyList = document.getElementById('historyList');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+
+            const PER_PAGE = 20;
+            let currentPage = 1;
+            let currentFilter = 'all';
+
+            function renderHistory() {
+                let history = Storage.getHistory();
+                
+                // Фильтр
+                if (currentFilter !== 'all') {
+                    history = history.filter(item => item.rarity === parseInt(currentFilter));
+                }
+
+                // Пагинация
+                const totalItems = history.length;
+                const totalPages = Math.ceil(totalItems / PER_PAGE) || 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                const start = (currentPage - 1) * PER_PAGE;
+                const end = start + PER_PAGE;
+                const pageItems = history.slice().reverse().slice(start, end);
+
+                // Обновляем информацию
+                const showing = pageItems.length > 0 ? `${start + 1}–${start + pageItems.length}` : '0–0';
+                pageInfo.textContent = `${showing} из ${totalItems}`;
+
+                // Кнопки пагинации
+                prevBtn.disabled = currentPage <= 1;
+                nextBtn.disabled = currentPage >= totalPages;
+
+                // Рендер списка
+                if (pageItems.length === 0) {
+                    historyList.innerHTML = `
+                        <div class="empty-state">
+                            <span class="empty-icon">◈</span>
+                            <p>НИЧЕГО НЕ НАЙДЕНО</p>
+                            <p class="empty-hint">Попробуйте другой фильтр</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                historyList.innerHTML = pageItems.map((item, index) => {
+                    const date = new Date(item.date);
+                    const dateStr = date.toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit'
+                    });
+                    const timeStr = date.toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    let rarityClass = 'h-rarity-3';
+                    if (item.rarity === 5) rarityClass = 'h-rarity-5';
+                    else if (item.rarity === 4) rarityClass = 'h-rarity-4';
+
+                    return `
+                        <div class="history-item ${rarityClass}">
+                            <div class="history-number">#${totalItems - start - index}</div>
+                            <div class="history-square ${rarityClass}">
+                                <span>?</span>
+                            </div>
+                            <div class="history-info">
+                                <p class="history-name">${item.name}</p>
+                                <p class="history-stars">${'★'.repeat(item.rarity)}</p>
+                            </div>
+                            <div class="history-date">
+                                <span>${dateStr}</span>
+                                <span>${timeStr}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Фильтры
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    currentPage = 1;
+                    renderHistory();
+                });
+            });
+
+            // Пагинация
+            prevBtn.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderHistory();
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                const totalItems = currentFilter === 'all' 
+                    ? Storage.getHistory().length 
+                    : Storage.getHistory().filter(i => i.rarity === parseInt(currentFilter)).length;
+                const totalPages = Math.ceil(totalItems / PER_PAGE) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderHistory();
+                }
+            });
+
+            renderHistory();
+        })();
+    </script>
+</body>
+</html>

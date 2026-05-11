@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Крутки — Wish Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="stars-container">
+        <span class="star" style="top: 5%; left: 20%;"></span>
+        <span class="star" style="top: 80%; left: 75%; animation-delay: 0.6s;"></span>
+        <span class="star" style="top: 45%; left: 90%; animation-delay: 1.3s;"></span>
+        <span class="star" style="top: 30%; left: 10%; animation-delay: 1.9s;"></span>
+    </div>
+
+    <div class="wish-layout">
+        <!-- Левая панель: управление -->
+        <aside class="wish-sidebar">
+            <div class="title-block" style="margin-bottom: 2vh;">
+                <h1 class="title" style="font-size: clamp(24px, 4vh, 36px);">
+                    <span class="title-icon">✦</span> КРУТКИ <span class="title-icon">✦</span>
+                </h1>
+            </div>
+
+            <!-- Выбор баннера -->
+            <div class="banner-selector" id="bannerSelector">
+                <!-- Заполняется из JS -->
+            </div>
+
+            <!-- Баланс -->
+            <div class="gems-display">
+                <span class="gems-icon">◆</span>
+                <span id="gemsBalance">0</span>
+                <span class="gems-cost">/ 160</span>
+            </div>
+
+            <!-- Кнопки круток -->
+            <div class="wish-buttons-col">
+                <button class="wish-btn" id="wishButton">
+                    <span class="btn-icon">✦</span>
+                    ×1 КРУТКА
+                </button>
+                <button class="wish-btn" id="wish10Button">
+                    <span class="btn-icon">✦</span>
+                    ×10 КРУТОК
+                </button>
+                <button class="add-gems-btn" id="addGemsBtn">+1600</button>
+            </div>
+
+            <a href="index.html" class="menu-btn" style="width: 100%; margin-top: auto;">
+                <span class="btn-icon">←</span>
+                НАЗАД
+            </a>
+        </aside>
+
+        <!-- Правая часть: баннер во весь экран -->
+        <section class="wish-main">
+            <div class="banner-fullscreen" id="bannerFullscreen">
+                <div class="banner-character" id="charDisplay">
+                    <span>?</span>
+                </div>
+                <p class="banner-label" id="bannerLabel">БАННЕР ПЕРСОНАЖЕЙ</p>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-overlay" id="resultModal" style="display: none;">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/pity.js"></script>
+    <script>
+        (function() {
+            const wishBtn = document.getElementById('wishButton');
+            const wish10Btn = document.getElementById('wish10Button');
+            const addGemsBtn = document.getElementById('addGemsBtn');
+            const gemsBalance = document.getElementById('gemsBalance');
+            const modal = document.getElementById('resultModal');
+            const modalContent = document.getElementById('modalContent');
+            const bannerSelector = document.getElementById('bannerSelector');
+            const bannerFullscreen = document.getElementById('bannerFullscreen');
+            const bannerLabel = document.getElementById('bannerLabel');
+            const charDisplay = document.getElementById('charDisplay');
+
+            function renderBannerSelector() {
+                bannerSelector.innerHTML = BANNERS.map(banner => {
+                    const active = banner.id === currentBanner.id ? ' active' : '';
+                    return `
+                        <button class="banner-select-btn${active}" 
+                                data-id="${banner.id}" 
+                                style="--accent: ${banner.color}">
+                            ${banner.fiveStar.name}
+                        </button>
+                    `;
+                }).join('');
+
+                bannerSelector.querySelectorAll('.banner-select-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.dataset.id);
+                        currentBanner = BANNERS.find(b => b.id === id);
+                        updateBannerDisplay();
+                        renderBannerSelector();
+                    });
+                });
+            }
+
+            function updateBannerDisplay() {
+                bannerFullscreen.style.borderColor = currentBanner.color;
+                bannerFullscreen.style.boxShadow = `inset 0 0 60px ${currentBanner.color}15, 0 0 30px ${currentBanner.color}20`;
+                bannerLabel.textContent = currentBanner.name.toUpperCase();
+                bannerLabel.style.color = currentBanner.color;
+                charDisplay.style.borderColor = currentBanner.color;
+                charDisplay.style.boxShadow = `0 0 30px ${currentBanner.color}30`;
+            }
+
+            function updateUI() {
+                const data = Storage.getData();
+                gemsBalance.textContent = data.primogems;
+            }
+
+            function showResult(char) {
+                let rarityClass = 'rarity-3';
+                let rarityLabel = '★★★';
+                if (char.rarity === 5) {
+                    rarityClass = 'rarity-5';
+                    rarityLabel = '★★★★★';
+                } else if (char.rarity === 4) {
+                    rarityClass = 'rarity-4';
+                    rarityLabel = '★★★★';
+                }
+
+                modalContent.innerHTML = `
+                    <div class="result-card ${rarityClass}">
+                        <div class="result-flash"></div>
+                        <div class="result-square ${rarityClass}">
+                            <span>?</span>
+                        </div>
+                        <p class="result-name">${char.name}</p>
+                        <p class="result-stars">${rarityLabel}</p>
+                    </div>
+                `;
+
+                modal.style.display = 'flex';
+                
+                setTimeout(() => {
+                    modalContent.querySelector('.result-flash').classList.add('active');
+                }, 100);
+
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        updateUI();
+                    }
+                };
+            }
+
+            function showMultiResult(results) {
+                const hasFiveStar = results.some(r => r.rarity === 5);
+                const hasFourStar = results.some(r => r.rarity === 4);
+                
+                let wrapperClass = 'rarity-3';
+                if (hasFiveStar) wrapperClass = 'rarity-5';
+                else if (hasFourStar) wrapperClass = 'rarity-4';
+
+                const itemsHTML = results.map(char => {
+                    let itemClass = '';
+                    if (char.rarity === 5) itemClass = 'five-star-item';
+                    else if (char.rarity === 4) itemClass = 'four-star-item';
+                    
+                    return `
+                        <div class="multi-item ${itemClass}">
+                            <div class="multi-square ${itemClass}">
+                                <span>?</span>
+                            </div>
+                            <p class="multi-name">${char.name}</p>
+                            <p class="multi-stars">${'★'.repeat(char.rarity)}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                modalContent.innerHTML = `
+                    <div class="result-card multi ${wrapperClass}">
+                        <div class="result-flash"></div>
+                        <h3 class="multi-title">РЕЗУЛЬТАТЫ ×10</h3>
+                        <div class="multi-grid">
+                            ${itemsHTML}
+                        </div>
+                        <button class="multi-close-btn" id="closeMultiBtn">ЗАКРЫТЬ</button>
+                    </div>
+                `;
+
+                modal.style.display = 'flex';
+                
+                setTimeout(() => {
+                    modalContent.querySelector('.result-flash').classList.add('active');
+                }, 100);
+
+                document.getElementById('closeMultiBtn').addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    updateUI();
+                });
+
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        updateUI();
+                    }
+                };
+            }
+
+            addGemsBtn.addEventListener('click', function() {
+                Storage.addGems(1600);
+                updateUI();
+            });
+
+            wishBtn.addEventListener('click', function() {
+                const data = Storage.getData();
+                
+                if (data.primogems < WISH_COST) {
+                    alert('Недостаточно примогемов! Нужно ' + WISH_COST);
+                    return;
+                }
+
+                Storage.spendGems(WISH_COST);
+                const result = Pity.performWish();
+                showResult(result);
+            });
+
+            wish10Btn.addEventListener('click', function() {
+                const data = Storage.getData();
+                const cost = WISH_COST * 10;
+                
+                if (data.primogems < cost) {
+                    alert('Недостаточно примогемов! Нужно ' + cost);
+                    return;
+                }
+
+                Storage.spendGems(cost);
+                
+                const results = [];
+                for (let i = 0; i < 10; i++) {
+                    results.push(Pity.performWish());
+                }
+                
+                showMultiResult(results);
+            });
+
+            renderBannerSelector();
+            updateBannerDisplay();
+            updateUI();
+        })();
+    </script>
+</body>
+</html>
