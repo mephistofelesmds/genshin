@@ -137,7 +137,7 @@
                              data-index="${index}" 
                              style="--accent: ${banner.color}">
                             <div class="carousel-card-square">
-                                <span>?</span>
+                                <img src="${banner.fiveStar.img}" alt="${banner.fiveStar.name}" style="width:100%;height:100%;object-fit:contain;">
                             </div>
                             <p class="carousel-card-name">${banner.fiveStar.name}</p>
                         </div>
@@ -198,6 +198,8 @@
                 bannerLabel.style.color = currentBanner.color;
                 charDisplay.style.borderColor = currentBanner.color;
                 charDisplay.style.boxShadow = `0 0 30px ${currentBanner.color}30`;
+                // Вставляем картинку
+                charDisplay.innerHTML = `<img src="${currentBanner.fiveStar.img}" alt="${currentBanner.fiveStar.name}" style="width:100%;height:100%;object-fit:contain;">`;
             }
 
             function updateUI() {
@@ -220,7 +222,7 @@
                     <div class="result-card ${rarityClass}">
                         <div class="result-flash"></div>
                         <div class="result-square ${rarityClass}">
-                            <span>?</span>
+                            <img src="${char.img}" alt="${char.name}" style="width:100%;height:100%;object-fit:contain;">
                         </div>
                         <p class="result-name">${char.name}</p>
                         <p class="result-stars">${rarityLabel}</p>
@@ -257,7 +259,7 @@
                     return `
                         <div class="multi-item ${itemClass}">
                             <div class="multi-square ${itemClass}">
-                                <span>?</span>
+                                <img src="${char.img}" alt="${char.name}" style="width:100%;height:100%;object-fit:contain;">
                             </div>
                             <p class="multi-name">${char.name}</p>
                             <p class="multi-stars">${'★'.repeat(char.rarity)}</p>

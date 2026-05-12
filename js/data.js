@@ -1,13 +1,13 @@
 // Все 5★ персонажи
 const ALL_FIVE_STARS = [
-    { id: '5-1', name: 'Мефисто', rarity: 5 },
-    { id: '5-2', name: 'Фици', rarity: 5 },
-    { id: '5-3', name: 'Молли', rarity: 5 },
-    { id: '5-4', name: 'Лишайник', rarity: 5 },
-    { id: '5-5', name: 'Шино', rarity: 5 },
-    { id: '5-6', name: 'Шанон', rarity: 5 },
-    { id: '5-7', name: 'Мису', rarity: 5 },
-    { id: '5-8', name: 'Лихуа', rarity: 5 },
+    { id: '5-1', name: 'Мефисто', rarity: 5, img: 'assets/characters/mephisto.png'},
+    { id: '5-2', name: 'Молли', rarity: 5, img: 'assets/characters/molly.png' },
+    { id: '5-3', name: 'Фици', rarity: 5, img: 'assets/characters/fici.png' },
+    { id: '5-4', name: 'Шино', rarity: 5, img: 'assets/characters/shino.png' },
+    { id: '5-5', name: 'Лишайник', rarity: 5, img: 'assets/characters/lish.png' },
+    { id: '5-6', name: 'Шэнон', rarity: 5, img: 'assets/characters/shenon.png' },
+    { id: '5-7', name: 'Мису', rarity: 5, img: 'assets/characters/misy.png' },
+    { id: '5-8', name: 'Лихуа', rarity: 5, img: 'assets/characters/lih.png' },
 ];
 
 // Все 4★ персонажи
@@ -40,7 +40,7 @@ const BANNERS = [
     {
         id: 1,
         name: 'Электро',
-        fiveStar: HALF_1[0],        // Архонт Огня
+        fiveStar: HALF_1[0],       
         fourStars: [ALL_FOUR_STARS[0], ALL_FOUR_STARS[1], ALL_FOUR_STARS[2]], // Рыцарь, Лучница, Маг
         color: '#9370db'
     },
