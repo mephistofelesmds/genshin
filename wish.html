@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Крутки — Wish Simulator</title>
     <link rel="stylesheet" href="css/style.css">
-    <meta name="screen-orientation" content="landscape">
-    <script src="js/rotate.js"></script>
 </head>
 <body>
     <div class="stars-container">
@@ -17,7 +15,7 @@
     </div>
 
     <div class="wish-layout">
-        <!-- Левая панель: управление -->
+        <!-- Левая панель (десктоп) -->
         <aside class="wish-sidebar">
             <div class="title-block" style="margin-bottom: 2vh;">
                 <h1 class="title" style="font-size: clamp(24px, 4vh, 36px);">
@@ -25,19 +23,15 @@
                 </h1>
             </div>
 
-            <!-- Выбор баннера -->
-            <div class="banner-selector" id="bannerSelector">
-                <!-- Заполняется из JS -->
-            </div>
+            <!-- Выбор баннера (десктоп — вертикальный список) -->
+            <div class="banner-selector banner-selector-desktop" id="bannerSelector"></div>
 
-            <!-- Баланс -->
             <div class="gems-display">
                 <span class="gems-icon">◆</span>
                 <span id="gemsBalance">0</span>
                 <span class="gems-cost">/ 160</span>
             </div>
 
-            <!-- Кнопки круток -->
             <div class="wish-buttons-col">
                 <button class="wish-btn" id="wishButton">
                     <span class="btn-icon">✦</span>
@@ -56,8 +50,21 @@
             </a>
         </aside>
 
-        <!-- Правая часть: баннер во весь экран -->
+        <!-- Правая часть: баннер -->
         <section class="wish-main">
+            <!-- Карусель баннеров для мобильных -->
+            <div class="banner-carousel" id="bannerCarousel">
+                <button class="carousel-arrow carousel-left" id="carouselLeft">←</button>
+                <div class="carousel-viewport" id="carouselViewport">
+                    <div class="carousel-track" id="carouselTrack"></div>
+                </div>
+                <button class="carousel-arrow carousel-right" id="carouselRight">→</button>
+            </div>
+
+            <!-- Индикатор активного баннера (точки) -->
+            <div class="carousel-dots" id="carouselDots"></div>
+
+            <!-- Текущий баннер -->
             <div class="banner-fullscreen" id="bannerFullscreen">
                 <div class="banner-character" id="charDisplay">
                     <span>?</span>
@@ -86,8 +93,15 @@
             const bannerFullscreen = document.getElementById('bannerFullscreen');
             const bannerLabel = document.getElementById('bannerLabel');
             const charDisplay = document.getElementById('charDisplay');
+            const carouselTrack = document.getElementById('carouselTrack');
+            const carouselDots = document.getElementById('carouselDots');
+            const carouselLeft = document.getElementById('carouselLeft');
+            const carouselRight = document.getElementById('carouselRight');
+
+            let carouselIndex = 0;
 
             function renderBannerSelector() {
+                // Десктопный список
                 bannerSelector.innerHTML = BANNERS.map(banner => {
                     const active = banner.id === currentBanner.id ? ' active' : '';
                     return `
@@ -103,11 +117,79 @@
                     btn.addEventListener('click', function() {
                         const id = parseInt(this.dataset.id);
                         currentBanner = BANNERS.find(b => b.id === id);
+                        carouselIndex = BANNERS.indexOf(currentBanner);
                         updateBannerDisplay();
                         renderBannerSelector();
+                        renderCarousel();
                     });
                 });
+
+                // Мобильная карусель
+                renderCarousel();
             }
+
+            function renderCarousel() {
+                // Трек с карточками
+                carouselTrack.innerHTML = BANNERS.map((banner, index) => {
+                    const active = index === carouselIndex ? ' active' : '';
+                    return `
+                        <div class="carousel-card${active}" 
+                             data-index="${index}" 
+                             style="--accent: ${banner.color}">
+                            <div class="carousel-card-square">
+                                <span>?</span>
+                            </div>
+                            <p class="carousel-card-name">${banner.fiveStar.name}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                // Точки
+                carouselDots.innerHTML = BANNERS.map((_, index) => {
+                    const active = index === carouselIndex ? ' active' : '';
+                    return `<span class="carousel-dot${active}" data-index="${index}"></span>`;
+                }).join('');
+
+                // Обработчики точек
+                carouselDots.querySelectorAll('.carousel-dot').forEach(dot => {
+                    dot.addEventListener('click', function() {
+                        carouselIndex = parseInt(this.dataset.index);
+                        selectBannerByIndex(carouselIndex);
+                    });
+                });
+
+                // Скролл к активной карточке
+                const activeCard = carouselTrack.querySelector('.carousel-card.active');
+                if (activeCard) {
+                    activeCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+
+                // Стрелки
+                carouselLeft.style.opacity = carouselIndex === 0 ? '0.3' : '1';
+                carouselRight.style.opacity = carouselIndex === BANNERS.length - 1 ? '0.3' : '1';
+            }
+
+            function selectBannerByIndex(index) {
+                carouselIndex = index;
+                currentBanner = BANNERS[index];
+                updateBannerDisplay();
+                renderBannerSelector();
+                renderCarousel();
+            }
+
+            carouselLeft.addEventListener('click', function() {
+                if (carouselIndex > 0) {
+                    carouselIndex--;
+                    selectBannerByIndex(carouselIndex);
+                }
+            });
+
+            carouselRight.addEventListener('click', function() {
+                if (carouselIndex < BANNERS.length - 1) {
+                    carouselIndex++;
+                    selectBannerByIndex(carouselIndex);
+                }
+            });
 
             function updateBannerDisplay() {
                 bannerFullscreen.style.borderColor = currentBanner.color;
@@ -254,10 +336,6 @@
             updateBannerDisplay();
             updateUI();
         })();
-        
-        
     </script>
-    
-</div>
 </body>
 </html>
