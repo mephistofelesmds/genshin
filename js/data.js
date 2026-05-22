@@ -18,7 +18,7 @@ const ALL_FOUR_STARS = [
     { id: '4-4', name: 'Ноши', rarity: 4 },
     { id: '4-5', name: 'Мавалур', rarity: 4 },
     { id: '4-6', name: 'Гуашко', rarity: 4 },
-    { id: '4-7', name: 'Ян', rarity: 4 },
+    { id: '4-7', name: 'Юань', rarity: 4 },
     { id: '4-8', name: 'Папая', rarity: 4 },
 ];
 
