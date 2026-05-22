@@ -12,6 +12,20 @@
         <span class="star" style="top: 80%; left: 75%; animation-delay: 0.6s;"></span>
         <span class="star" style="top: 45%; left: 90%; animation-delay: 1.3s;"></span>
         <span class="star" style="top: 30%; left: 10%; animation-delay: 1.9s;"></span>
+        <span class="star" style="top: 60%; left: 40%; animation-delay: 0.8s;"></span>
+        <span class="star" style="top: 15%; left: 55%; animation-delay: 1.5s;"></span>
+    </div>
+
+    <!-- Оверлей анимации падающей звезды -->
+    <div class="wish-animation-overlay" id="wishAnimation" style="display: none;">
+        <div class="falling-star-container">
+            <div class="falling-star" id="fallingStar">
+                <div class="star-core">✦</div>
+                <div class="star-trail"></div>
+            </div>
+            <div class="star-rarity-hint" id="starRarityHint"></div>
+            <button class="skip-animation-btn" id="skipAnimationBtn">пропустить</button>
+        </div>
     </div>
 
     <div class="wish-layout">
@@ -23,7 +37,6 @@
                 </h1>
             </div>
 
-            <!-- Выбор баннера (десктоп — вертикальный список) -->
             <div class="banner-selector banner-selector-desktop" id="bannerSelector"></div>
 
             <div class="gems-display">
@@ -50,9 +63,7 @@
             </a>
         </aside>
 
-        <!-- Правая часть: баннер -->
         <section class="wish-main">
-            <!-- Карусель баннеров для мобильных -->
             <div class="banner-carousel" id="bannerCarousel">
                 <button class="carousel-arrow carousel-left" id="carouselLeft">←</button>
                 <div class="carousel-viewport" id="carouselViewport">
@@ -61,10 +72,8 @@
                 <button class="carousel-arrow carousel-right" id="carouselRight">→</button>
             </div>
 
-            <!-- Индикатор активного баннера (точки) -->
             <div class="carousel-dots" id="carouselDots"></div>
 
-            <!-- Текущий баннер -->
             <div class="banner-fullscreen" id="bannerFullscreen">
                 <div class="banner-character" id="charDisplay">
                     <span>?</span>
@@ -81,8 +90,65 @@
     <script src="js/storage.js"></script>
     <script src="js/data.js"></script>
     <script src="js/pity.js"></script>
+    <style>
+        /* Стили для кнопки пропуска анимации */
+        /* Стили для кнопки пропуска анимации */
+        .skip-animation-btn {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            background: rgba(20, 5, 40, 0.6);
+            border: 1px solid rgba(160, 110, 255, 0.25);
+            border-radius: 20px;
+            color: #8a7aae;
+            font-family: 'Lighthaus', 'Segoe UI', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+            z-index: 10;
+        }
+        
+        .skip-animation-btn:hover {
+            background: rgba(160, 110, 255, 0.15);
+            border-color: rgba(160, 110, 255, 0.4);
+            color: #c0b0e0;
+        }
+        
+        @media (max-width: 700px) {
+            .skip-animation-btn {
+                bottom: -50px;
+                padding: 4px 12px;
+                font-size: 9px;
+                letter-spacing: 1.5px;
+            }
+        }
+        
+        @keyframes skipBtnPulse {
+            0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
+        }
+        
+        .skip-animation-btn {
+            animation: skipBtnPulse 0.8s ease-in-out infinite;
+        }
+        
+        @media (max-width: 700px) {
+            .skip-animation-btn {
+                bottom: -50px;
+                padding: 8px 18px;
+                font-size: 11px;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
     <script>
         (function() {
+            // DOM элементы
             const wishBtn = document.getElementById('wishButton');
             const wish10Btn = document.getElementById('wish10Button');
             const addGemsBtn = document.getElementById('addGemsBtn');
@@ -90,7 +156,6 @@
             const modal = document.getElementById('resultModal');
             const modalContent = document.getElementById('modalContent');
             const bannerSelector = document.getElementById('bannerSelector');
-            const bannerFullscreen = document.getElementById('bannerFullscreen');
             const bannerLabel = document.getElementById('bannerLabel');
             const charDisplay = document.getElementById('charDisplay');
             const carouselTrack = document.getElementById('carouselTrack');
@@ -98,10 +163,328 @@
             const carouselLeft = document.getElementById('carouselLeft');
             const carouselRight = document.getElementById('carouselRight');
 
+            // Элементы анимации
+            const wishAnimation = document.getElementById('wishAnimation');
+            const fallingStar = document.getElementById('fallingStar');
+            const starRarityHint = document.getElementById('starRarityHint');
+            const skipAnimationBtn = document.getElementById('skipAnimationBtn');
+
             let carouselIndex = 0;
+            let isAnimating = false;
+            let animationTimeout = null;
+            let currentStepResolve = null;
+            let shouldSkipAll = false;
+            let cachedResults = null;
+            let isMultiWish = false;
+
+            // Полная отмена текущей анимации
+            function abortCurrentAnimation() {
+                if (animationTimeout) {
+                    clearTimeout(animationTimeout);
+                    animationTimeout = null;
+                }
+                if (currentStepResolve) {
+                    currentStepResolve();
+                    currentStepResolve = null;
+                }
+                wishAnimation.style.display = 'none';
+            }
+
+            // Анимация одной звезды (с возможностью полного пропуска)
+            function animateSingleStar(rarity, isMulti = false) {
+                return new Promise((resolve) => {
+                    if (shouldSkipAll) {
+                        resolve();
+                        return;
+                    }
+                    
+                    let starColor, trailColor, glowColor, rarityText;
+                    switch(rarity) {
+                        case 5:
+                            starColor = '#ffd700';
+                            trailColor = '#ffaa00';
+                            glowColor = 'rgba(255, 215, 0, 0.8)';
+                            rarityText = '★★★★★';
+                            break;
+                        case 4:
+                            starColor = '#c9a0ff';
+                            trailColor = '#9b59b6';
+                            glowColor = 'rgba(201, 160, 255, 0.8)';
+                            rarityText = '★★★★';
+                            break;
+                        default:
+                            starColor = '#8090b0';
+                            trailColor = '#5a6a8a';
+                            glowColor = 'rgba(128, 144, 176, 0.6)';
+                            rarityText = '★★★';
+                    }
+                    
+                    fallingStar.style.setProperty('--star-color', starColor);
+                    fallingStar.style.setProperty('--trail-color', trailColor);
+                    fallingStar.style.setProperty('--glow-color', glowColor);
+                    
+                    starRarityHint.textContent = rarityText;
+                    starRarityHint.style.color = starColor;
+                    starRarityHint.style.textShadow = `0 0 15px ${starColor}`;
+                    
+                    fallingStar.style.animation = 'none';
+                    fallingStar.offsetHeight;
+                    fallingStar.style.animation = `starFall ${isMulti ? 1.2 : 0.9}s cubic-bezier(0.4, 0, 0.2, 1) forwards`;
+                    
+                    if (rarity === 5 && navigator.vibrate) {
+                        navigator.vibrate(100);
+                    }
+                    
+                    currentStepResolve = resolve;
+                    const duration = isMulti ? 1200 : 900;
+                    animationTimeout = setTimeout(() => {
+                        animationTimeout = null;
+                        if (currentStepResolve === resolve) {
+                            currentStepResolve = null;
+                            resolve();
+                        }
+                    }, duration);
+                });
+            }
+
+            // Эффект взрыва для 5★
+            function createParticleExplosion() {
+                const colors = ['#ffd700', '#ffed4e', '#ffaa00', '#ffcc33', '#ffe066'];
+                for (let i = 0; i < 60; i++) {
+                    const particle = document.createElement('span');
+                    particle.innerHTML = Math.random() > 0.5 ? '✦' : '◇';
+                    particle.style.position = 'fixed';
+                    particle.style.left = '50%';
+                    particle.style.top = '50%';
+                    particle.style.fontSize = `${Math.random() * 24 + 12}px`;
+                    particle.style.color = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.pointerEvents = 'none';
+                    particle.style.zIndex = '300';
+                    particle.style.opacity = '1';
+                    particle.style.filter = `drop-shadow(0 0 ${Math.random() * 8 + 2}px gold)`;
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 250 + 80;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    const rotation = Math.random() * 720 - 360;
+                    
+                    document.body.appendChild(particle);
+                    
+                    particle.animate([
+                        { transform: 'translate(-50%, -50%) rotate(0deg) scale(1)', opacity: 1 },
+                        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) rotate(${rotation}deg) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: 800,
+                        easing: 'cubic-bezier(0.2, 0.9, 0.4, 1)',
+                        delay: Math.random() * 100
+                    }).onfinish = () => particle.remove();
+                }
+                
+                const flash = document.createElement('div');
+                flash.style.position = 'fixed';
+                flash.style.top = '0';
+                flash.style.left = '0';
+                flash.style.width = '100%';
+                flash.style.height = '100%';
+                flash.style.backgroundColor = 'rgba(255, 215, 0, 0.3)';
+                flash.style.pointerEvents = 'none';
+                flash.style.zIndex = '299';
+                flash.style.animation = 'flashFade 0.4s ease-out forwards';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.remove(), 400);
+            }
+
+            // Показать результат одиночной крутки
+            function showSingleResult(char) {
+                let rarityClass = 'rarity-3';
+                let rarityLabel = '★★★';
+                
+                if (char.rarity === 5) {
+                    rarityClass = 'rarity-5';
+                    rarityLabel = '★★★★★';
+                    createParticleExplosion();
+                } else if (char.rarity === 4) {
+                    rarityClass = 'rarity-4';
+                    rarityLabel = '★★★★';
+                }
+
+               
+                modalContent.innerHTML = `
+                    <div class="result-card ${rarityClass} result-reveal">
+                        <div class="result-flash"></div>
+                        <p class="result-name">${char.name}</p>
+                        <p class="result-stars">${rarityLabel}</p>
+                    </div>
+                `;
+
+                modal.style.display = 'flex';
+                
+                setTimeout(() => {
+                    const flash = modalContent.querySelector('.result-flash');
+                    if (flash) flash.classList.add('active');
+                }, 50);
+
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        updateUI();
+                    }
+                };
+            }
+
+            // Показать мульти-результат (все 10)
+            function showMultiResult(results) {
+                const hasFiveStar = results.some(r => r.rarity === 5);
+                const hasFourStar = results.some(r => r.rarity === 4);
+                
+                let wrapperClass = 'rarity-3';
+                if (hasFiveStar) {
+                    wrapperClass = 'rarity-5';
+                    createParticleExplosion();
+                } else if (hasFourStar) {
+                    wrapperClass = 'rarity-4';
+                }
+
+                const itemsHTML = results.map((char, idx) => {
+                    let itemClass = '';
+                    if (char.rarity === 5) itemClass = 'five-star-item';
+                    else if (char.rarity === 4) itemClass = 'four-star-item';
+                    
+                    return `
+                        <div class="multi-item ${itemClass}" style="animation: revealResult 0.2s ease-out ${idx * 50}ms both;">
+                            <p class="multi-name">${char.name.length > 12 ? char.name.slice(0, 10) + '…' : char.name}</p>
+                            <p class="multi-stars">${'★'.repeat(char.rarity)}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                modalContent.innerHTML = `
+                    <div class="result-card multi ${wrapperClass} result-reveal">
+                        <div class="result-flash"></div>
+                        <h3 class="multi-title">РЕЗУЛЬТАТЫ ×10</h3>
+                        <div class="multi-grid">
+                            ${itemsHTML}
+                        </div>
+                        <button class="multi-close-btn" id="closeMultiBtn">ЗАКРЫТЬ</button>
+                    </div>
+                `;
+
+                modal.style.display = 'flex';
+                
+                setTimeout(() => {
+                    const flash = modalContent.querySelector('.result-flash');
+                    if (flash) flash.classList.add('active');
+                }, 50);
+
+                const closeBtn = document.getElementById('closeMultiBtn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        updateUI();
+                    });
+                }
+
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        updateUI();
+                    }
+                };
+            }
+
+            // Полный пропуск всей анимации
+            function skipAllAnimation() {
+                if (!isAnimating) return;
+                
+                shouldSkipAll = true;
+                abortCurrentAnimation();
+                wishAnimation.style.display = 'none';
+                
+                if (cachedResults) {
+                    if (isMultiWish) {
+                        showMultiResult(cachedResults);
+                    } else {
+                        showSingleResult(cachedResults);
+                    }
+                    cachedResults = null;
+                }
+                
+                shouldSkipAll = false;
+                isAnimating = false;
+                isMultiWish = false;
+            }
+
+            // Одиночная крутка с анимацией
+            async function performSingleWish() {
+                const data = Storage.getData();
+                if (data.primogems < WISH_COST) {
+                    alert('Недостаточно примогемов! Нужно ' + WISH_COST);
+                    return false;
+                }
+
+                Storage.spendGems(WISH_COST);
+                updateUI();
+                
+                const result = Pity.performWish();
+                cachedResults = result;
+                isMultiWish = false;
+                
+                wishAnimation.style.display = 'flex';
+                await animateSingleStar(result.rarity, false);
+                
+                if (!shouldSkipAll) {
+                    wishAnimation.style.display = 'none';
+                    showSingleResult(result);
+                }
+                
+                cachedResults = null;
+                return true;
+            }
+
+            // Мульти-крутка с анимацией
+            async function performMultiWish() {
+                const data = Storage.getData();
+                const cost = WISH_COST * 10;
+                
+                if (data.primogems < cost) {
+                    alert('Недостаточно примогемов! Нужно ' + cost);
+                    return false;
+                }
+
+                Storage.spendGems(cost);
+                updateUI();
+                
+                const results = [];
+                for (let i = 0; i < 10; i++) {
+                    results.push(Pity.performWish());
+                }
+                cachedResults = results;
+                isMultiWish = true;
+                
+                wishAnimation.style.display = 'flex';
+                
+                // Показываем анимации по очереди, но с возможностью полного пропуска
+                for (let i = 0; i < results.length; i++) {
+                    if (shouldSkipAll) break;
+                    await animateSingleStar(results[i].rarity, true);
+                    if (i < results.length - 1 && !shouldSkipAll) {
+                        await new Promise(r => setTimeout(r, 120));
+                    }
+                }
+                
+                if (!shouldSkipAll) {
+                    wishAnimation.style.display = 'none';
+                    showMultiResult(results);
+                }
+                
+                cachedResults = null;
+                return true;
+            }
+
+            // ========== БАННЕРЫ И ИНТЕРФЕЙС ==========
 
             function renderBannerSelector() {
-                // Десктопный список
                 bannerSelector.innerHTML = BANNERS.map(banner => {
                     const active = banner.id === currentBanner.id ? ' active' : '';
                     return `
@@ -115,6 +498,7 @@
 
                 bannerSelector.querySelectorAll('.banner-select-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        if (isAnimating) return;
                         const id = parseInt(this.dataset.id);
                         currentBanner = BANNERS.find(b => b.id === id);
                         carouselIndex = BANNERS.indexOf(currentBanner);
@@ -124,12 +508,10 @@
                     });
                 });
 
-                // Мобильная карусель
                 renderCarousel();
             }
 
             function renderCarousel() {
-                // Трек с карточками
                 carouselTrack.innerHTML = BANNERS.map((banner, index) => {
                     const active = index === carouselIndex ? ' active' : '';
                     return `
@@ -144,32 +526,30 @@
                     `;
                 }).join('');
 
-                // Точки
                 carouselDots.innerHTML = BANNERS.map((_, index) => {
                     const active = index === carouselIndex ? ' active' : '';
                     return `<span class="carousel-dot${active}" data-index="${index}"></span>`;
                 }).join('');
 
-                // Обработчики точек
                 carouselDots.querySelectorAll('.carousel-dot').forEach(dot => {
                     dot.addEventListener('click', function() {
+                        if (isAnimating) return;
                         carouselIndex = parseInt(this.dataset.index);
                         selectBannerByIndex(carouselIndex);
                     });
                 });
 
-                // Скролл к активной карточке
                 const activeCard = carouselTrack.querySelector('.carousel-card.active');
                 if (activeCard) {
                     activeCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
 
-                // Стрелки
                 carouselLeft.style.opacity = carouselIndex === 0 ? '0.3' : '1';
                 carouselRight.style.opacity = carouselIndex === BANNERS.length - 1 ? '0.3' : '1';
             }
 
             function selectBannerByIndex(index) {
+                if (isAnimating) return;
                 carouselIndex = index;
                 currentBanner = BANNERS[index];
                 updateBannerDisplay();
@@ -178,6 +558,7 @@
             }
 
             carouselLeft.addEventListener('click', function() {
+                if (isAnimating) return;
                 if (carouselIndex > 0) {
                     carouselIndex--;
                     selectBannerByIndex(carouselIndex);
@@ -185,6 +566,7 @@
             });
 
             carouselRight.addEventListener('click', function() {
+                if (isAnimating) return;
                 if (carouselIndex < BANNERS.length - 1) {
                     carouselIndex++;
                     selectBannerByIndex(carouselIndex);
@@ -192,13 +574,8 @@
             });
 
             function updateBannerDisplay() {
-                bannerFullscreen.style.borderColor = currentBanner.color;
-                bannerFullscreen.style.boxShadow = `inset 0 0 60px ${currentBanner.color}15, 0 0 30px ${currentBanner.color}20`;
                 bannerLabel.textContent = currentBanner.name.toUpperCase();
                 bannerLabel.style.color = currentBanner.color;
-                charDisplay.style.borderColor = currentBanner.color;
-                charDisplay.style.boxShadow = `0 0 30px ${currentBanner.color}30`;
-                // Вставляем картинку
                 charDisplay.innerHTML = `<img src="${currentBanner.fiveStar.img}" alt="${currentBanner.fiveStar.name}" style="width:100%;height:100%;object-fit:contain;">`;
             }
 
@@ -207,133 +584,36 @@
                 gemsBalance.textContent = data.primogems;
             }
 
-            function showResult(char) {
-                let rarityClass = 'rarity-3';
-                let rarityLabel = '★★★';
-                if (char.rarity === 5) {
-                    rarityClass = 'rarity-5';
-                    rarityLabel = '★★★★★';
-                } else if (char.rarity === 4) {
-                    rarityClass = 'rarity-4';
-                    rarityLabel = '★★★★';
-                }
-
-                modalContent.innerHTML = `
-                    <div class="result-card ${rarityClass}">
-                        <div class="result-flash"></div>
-                        <div class="result-square ${rarityClass}">
-                            <img src="${char.img}" alt="${char.name}" style="width:100%;height:100%;object-fit:contain;">
-                        </div>
-                        <p class="result-name">${char.name}</p>
-                        <p class="result-stars">${rarityLabel}</p>
-                    </div>
-                `;
-
-                modal.style.display = 'flex';
-                
-                setTimeout(() => {
-                    modalContent.querySelector('.result-flash').classList.add('active');
-                }, 100);
-
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                        updateUI();
-                    }
-                };
-            }
-
-            function showMultiResult(results) {
-                const hasFiveStar = results.some(r => r.rarity === 5);
-                const hasFourStar = results.some(r => r.rarity === 4);
-                
-                let wrapperClass = 'rarity-3';
-                if (hasFiveStar) wrapperClass = 'rarity-5';
-                else if (hasFourStar) wrapperClass = 'rarity-4';
-
-                const itemsHTML = results.map(char => {
-                    let itemClass = '';
-                    if (char.rarity === 5) itemClass = 'five-star-item';
-                    else if (char.rarity === 4) itemClass = 'four-star-item';
-                    
-                    return `
-                        <div class="multi-item ${itemClass}">
-                            <div class="multi-square ${itemClass}">
-                                <img src="${char.img}" alt="${char.name}" style="width:100%;height:100%;object-fit:contain;">
-                            </div>
-                            <p class="multi-name">${char.name}</p>
-                            <p class="multi-stars">${'★'.repeat(char.rarity)}</p>
-                        </div>
-                    `;
-                }).join('');
-
-                modalContent.innerHTML = `
-                    <div class="result-card multi ${wrapperClass}">
-                        <div class="result-flash"></div>
-                        <h3 class="multi-title">РЕЗУЛЬТАТЫ ×10</h3>
-                        <div class="multi-grid">
-                            ${itemsHTML}
-                        </div>
-                        <button class="multi-close-btn" id="closeMultiBtn">ЗАКРЫТЬ</button>
-                    </div>
-                `;
-
-                modal.style.display = 'flex';
-                
-                setTimeout(() => {
-                    modalContent.querySelector('.result-flash').classList.add('active');
-                }, 100);
-
-                document.getElementById('closeMultiBtn').addEventListener('click', function() {
-                    modal.style.display = 'none';
-                    updateUI();
-                });
-
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                        updateUI();
-                    }
-                };
-            }
+            // ========== ОБРАБОТЧИКИ КНОПОК ==========
 
             addGemsBtn.addEventListener('click', function() {
+                if (isAnimating) return;
                 Storage.addGems(1600);
                 updateUI();
             });
 
-            wishBtn.addEventListener('click', function() {
-                const data = Storage.getData();
-                
-                if (data.primogems < WISH_COST) {
-                    alert('Недостаточно примогемов! Нужно ' + WISH_COST);
-                    return;
-                }
-
-                Storage.spendGems(WISH_COST);
-                const result = Pity.performWish();
-                showResult(result);
+            skipAnimationBtn.addEventListener('click', function() {
+                skipAllAnimation();
             });
 
-            wish10Btn.addEventListener('click', function() {
-                const data = Storage.getData();
-                const cost = WISH_COST * 10;
-                
-                if (data.primogems < cost) {
-                    alert('Недостаточно примогемов! Нужно ' + cost);
-                    return;
-                }
-
-                Storage.spendGems(cost);
-                
-                const results = [];
-                for (let i = 0; i < 10; i++) {
-                    results.push(Pity.performWish());
-                }
-                
-                showMultiResult(results);
+            wishBtn.addEventListener('click', async function() {
+                if (isAnimating) return;
+                isAnimating = true;
+                shouldSkipAll = false;
+                await performSingleWish();
+                isAnimating = false;
             });
 
+            wish10Btn.addEventListener('click', async function() {
+                if (isAnimating) return;
+                isAnimating = true;
+                shouldSkipAll = false;
+                await performMultiWish();
+                isAnimating = false;
+            });
+
+            // ========== ИНИЦИАЛИЗАЦИЯ ==========
+            
             renderBannerSelector();
             updateBannerDisplay();
             updateUI();

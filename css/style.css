@@ -47,8 +47,8 @@ body {
 }
 
 @keyframes twinkle {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.8); }
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.6); }
 }
 
 /* Основное меню (для index, inventory, history) */
@@ -78,17 +78,24 @@ body {
     color: #ffffff;
     text-shadow: 0 0 40px rgba(150, 100, 255, 0.5);
     white-space: nowrap;
+    animation: titleGlow 4s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%, 100% { text-shadow: 0 0 40px rgba(150, 100, 255, 0.5); }
+    50% { text-shadow: 0 0 60px rgba(150, 100, 255, 0.8), 0 0 20px rgba(180, 130, 255, 0.4); }
 }
 
 .title-icon {
     color: #b388ff;
     font-size: clamp(32px, 6vh, 48px);
-    animation: pulse-icon 2s ease-in-out infinite;
+    display: inline-block;
+    animation: iconFloat 3s ease-in-out infinite;
 }
 
-@keyframes pulse-icon {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0px); opacity: 0.7; }
+    50% { transform: translateY(-5px); opacity: 1; }
 }
 
 .subtitle {
@@ -97,6 +104,19 @@ body {
     letter-spacing: 16px;
     color: #b388ff;
     margin-top: 1vh;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out 0.2s forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Кнопки меню */
@@ -123,27 +143,52 @@ body {
     font-weight: 400;
     letter-spacing: 6px;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     backdrop-filter: blur(4px);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(160, 110, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.menu-btn:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .menu-btn:hover {
     background: linear-gradient(135deg, rgba(123, 47, 255, 0.3) 0%, rgba(90, 31, 191, 0.3) 100%);
     border-color: #b388ff;
     box-shadow: 0 0 30px rgba(140, 90, 255, 0.4), inset 0 0 20px rgba(140, 90, 255, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.02);
     color: #ffffff;
 }
 
 .menu-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 0 15px rgba(140, 90, 255, 0.3);
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.1s;
 }
 
 .btn-icon {
     font-size: clamp(18px, 2.5vh, 24px);
     color: #b388ff;
+    transition: transform 0.3s ease;
+}
+
+.menu-btn:hover .btn-icon {
+    transform: scale(1.1);
 }
 
 /* Счётчик валюты */
@@ -160,6 +205,13 @@ body {
     font-weight: 300;
     letter-spacing: 3px;
     color: #d4c0ff;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.currency-display:hover {
+    border-color: rgba(160, 110, 255, 0.4);
+    box-shadow: 0 0 15px rgba(140, 90, 255, 0.2);
 }
 
 .currency-icon {
@@ -195,6 +247,19 @@ body {
     background: rgba(10, 0, 25, 0.6);
     border-right: 1px solid rgba(160, 110, 255, 0.15);
     z-index: 2;
+    backdrop-filter: blur(8px);
+    animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* Правая часть — баннер */
@@ -204,6 +269,18 @@ body {
     align-items: center;
     justify-content: center;
     padding: 4vh;
+    animation: fadeInScale 0.6s ease-out 0.1s both;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .banner-fullscreen {
@@ -217,27 +294,31 @@ body {
     background: rgba(20, 5, 40, 0.3);
     border: 2px solid rgba(160, 110, 255, 0.25);
     border-radius: 24px;
-    transition: all 0.4s ease;
+    transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    backdrop-filter: blur(4px);
+}
+
+.banner-fullscreen:hover {
+    border-color: rgba(160, 110, 255, 0.45);
+    box-shadow: 0 0 30px rgba(140, 90, 255, 0.2);
 }
 
 .banner-character {
-    width: min(280px, 50%);
-    height: min(360px, 55%);
-    background: linear-gradient(135deg, rgba(123, 47, 255, 0.15), rgba(90, 31, 191, 0.08));
-    border: 1px solid rgba(160, 110, 255, 0.2);
-    border-radius: 16px;
+    width: min(300px, 55%);
+    height: min(500px, 65%);
+    background: transparent;
+    border: none;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #b388ff;
-    font-size: 60px;
-    transition: all 0.4s ease;
+    transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 .banner-label {
     font-size: 16px;
     letter-spacing: 6px;
-    transition: color 0.4s ease;
+    transition: all 0.4s ease;
 }
 
 /* Кнопки выбора баннера (вертикально в боковой панели) */
@@ -269,7 +350,7 @@ body {
     font-size: 13px;
     letter-spacing: 2px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     text-align: center;
     width: 100%;
 }
@@ -278,6 +359,7 @@ body {
     background: rgba(160, 110, 255, 0.1);
     border-color: var(--accent);
     color: #c0b0d0;
+    transform: translateX(5px);
 }
 
 .banner-select-btn.active {
@@ -285,6 +367,7 @@ body {
     border-color: var(--accent);
     color: #ffffff;
     box-shadow: 0 0 10px var(--accent);
+    transform: translateX(5px);
 }
 
 /* Кнопки круток (вертикально) */
@@ -307,21 +390,38 @@ body {
     font-weight: 400;
     letter-spacing: 4px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.wish-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.wish-btn:hover::before {
+    left: 100%;
 }
 
 .wish-btn:hover {
     box-shadow: 0 0 30px rgba(140, 90, 255, 0.5);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
 }
 
 .wish-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 0 15px rgba(140, 90, 255, 0.3);
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.1s;
 }
 
 .wish-btn:disabled {
@@ -344,18 +444,19 @@ body {
     font-weight: 400;
     letter-spacing: 3px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 .add-gems-btn:hover {
     background: rgba(160, 110, 255, 0.2);
     border-color: #b388ff;
     box-shadow: 0 0 16px rgba(140, 90, 255, 0.3);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
 }
 
 .add-gems-btn:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.1s;
 }
 
 /* Баланс в боковой панели */
@@ -371,6 +472,12 @@ body {
     background: rgba(20, 5, 40, 0.4);
     border: 1px solid rgba(160, 110, 255, 0.2);
     border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.wish-sidebar .gems-display:hover {
+    border-color: rgba(160, 110, 255, 0.4);
+    box-shadow: 0 0 10px rgba(140, 90, 255, 0.15);
 }
 
 .gems-icon {
@@ -394,6 +501,8 @@ body {
     border: 1px solid rgba(160, 110, 255, 0.25);
     border-radius: 20px;
     flex-wrap: wrap;
+    backdrop-filter: blur(4px);
+    animation: fadeInUp 0.5s ease-out;
 }
 
 .stat-item {
@@ -451,6 +560,7 @@ body {
     text-align: center;
     padding: 30px 20px;
     color: #6b5b8a;
+    animation: fadeInScale 0.5s ease-out;
 }
 
 .empty-icon {
@@ -482,7 +592,15 @@ body {
     background: rgba(20, 5, 40, 0.4);
     border: 1px solid rgba(160, 110, 255, 0.15);
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    animation: fadeInScale 0.3s ease-out backwards;
+    animation-delay: calc(var(--index, 0) * 0.03s);
+}
+
+.inventory-card:hover {
+    transform: translateX(5px) scale(1.01);
+    border-color: rgba(160, 110, 255, 0.3);
+    background: rgba(20, 5, 40, 0.6);
 }
 
 .inventory-card.rarity-5 {
@@ -538,15 +656,28 @@ body {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
+    animation: fadeInOverlayModal 0.3s ease-out;
+}
+
+@keyframes fadeInOverlayModal {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
 }
 
 .modal-content {
     text-align: center;
-    animation: modalPop 0.3s ease;
+    animation: modalPop 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.2);
 }
 
 @keyframes modalPop {
-    0% { transform: scale(0.8); opacity: 0; }
+    0% { transform: scale(0.7); opacity: 0; }
+    60% { transform: scale(1.05); }
     100% { transform: scale(1); opacity: 1; }
 }
 
@@ -582,7 +713,7 @@ body {
     height: 0;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: all 0.4s ease-out;
+    transition: all 0.5s ease-out;
     pointer-events: none;
 }
 
@@ -688,6 +819,12 @@ body {
     padding: 8px;
     border-radius: 10px;
     background: rgba(20, 5, 40, 0.3);
+    transition: all 0.3s ease;
+}
+
+.multi-item:hover {
+    transform: scale(1.05);
+    background: rgba(20, 5, 40, 0.5);
 }
 
 .multi-item.five-star-item {
@@ -752,7 +889,7 @@ body {
     font-size: 14px;
     letter-spacing: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     position: relative;
     z-index: 1;
 }
@@ -760,6 +897,7 @@ body {
 .multi-close-btn:hover {
     background: rgba(160, 110, 255, 0.25);
     border-color: #b388ff;
+    transform: scale(1.02);
 }
 
 /* ========== ИСТОРИЯ МОЛИТВ ========== */
@@ -781,13 +919,14 @@ body {
     font-size: 14px;
     letter-spacing: 3px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 .filter-btn:hover {
     background: rgba(160, 110, 255, 0.15);
     border-color: rgba(160, 110, 255, 0.35);
     color: #b388ff;
+    transform: translateY(-2px);
 }
 
 .filter-btn.active {
@@ -838,7 +977,15 @@ body {
     background: rgba(20, 5, 40, 0.35);
     border: 1px solid rgba(160, 110, 255, 0.1);
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    animation: fadeInScale 0.3s ease-out backwards;
+    animation-delay: calc(var(--index, 0) * 0.02s);
+}
+
+.history-item:hover {
+    transform: translateX(5px);
+    background: rgba(20, 5, 40, 0.5);
+    border-color: rgba(160, 110, 255, 0.2);
 }
 
 .history-item.h-rarity-5 {
@@ -937,13 +1084,14 @@ body {
     font-size: 13px;
     letter-spacing: 3px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 .page-nav-btn:hover:not(:disabled) {
     background: rgba(160, 110, 255, 0.15);
     border-color: rgba(160, 110, 255, 0.35);
     color: #b388ff;
+    transform: translateY(-2px);
 }
 
 .page-nav-btn:disabled {
@@ -971,6 +1119,18 @@ body {
         border-bottom: 1px solid rgba(160, 110, 255, 0.15);
         max-height: 35vh;
         overflow-y: auto;
+        animation: slideInTop 0.4s ease-out;
+    }
+    
+    @keyframes slideInTop {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .wish-sidebar .title-block {
@@ -990,6 +1150,11 @@ body {
         width: auto;
         font-size: 11px;
         padding: 6px 10px;
+    }
+    
+    .banner-select-btn:hover,
+    .banner-select-btn.active {
+        transform: translateY(-2px);
     }
     
     .wish-buttons-col {
@@ -1139,7 +1304,7 @@ body {
     font-family: inherit;
     font-size: 18px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1149,6 +1314,7 @@ body {
 .carousel-arrow:hover {
     background: rgba(160, 110, 255, 0.2);
     border-color: #b388ff;
+    transform: scale(1.05);
 }
 
 .carousel-viewport {
@@ -1178,7 +1344,7 @@ body {
     border-radius: 14px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     min-width: 120px;
 }
 
@@ -1186,6 +1352,7 @@ body {
     border-color: var(--accent);
     background: rgba(160, 110, 255, 0.1);
     box-shadow: 0 0 12px var(--accent);
+    transform: scale(1.02);
 }
 
 .carousel-card-square {
@@ -1225,12 +1392,13 @@ body {
     background: rgba(160, 110, 255, 0.2);
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .carousel-dot.active {
     background: #b388ff;
     box-shadow: 0 0 6px #b388ff;
+    transform: scale(1.2);
 }
 
 /* На мобильных: показываем карусель и точки, скрываем десктопный список */
@@ -1311,5 +1479,325 @@ body {
         width: 40%;
         height: auto;
         aspect-ratio: 3/4;
+    }
+}
+
+/* ========== ДВУХКОЛОНОЧНЫЙ МАКЕТ ========== */
+
+.wish-layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* Левая панель */
+.wish-sidebar {
+    width: 280px;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2vh;
+    padding: 3vh 16px;
+    background: rgba(10, 0, 25, 0.8);
+    border-right: 1px solid rgba(160, 110, 255, 0.15);
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+/* Правая часть — баннер на весь остаток */
+.wish-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    overflow: hidden;
+}
+
+.banner-fullscreen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 5, 40, 0.2);
+    border: none;
+    border-radius: 0;
+    transition: all 0.4s ease;
+}
+
+.banner-character {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-character img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.banner-label {
+    position: absolute;
+    bottom: 20px;
+    font-size: 18px;
+    letter-spacing: 8px;
+    transition: color 0.4s ease;
+    z-index: 2;
+}
+
+/* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
+
+@media (max-width: 700px) {
+    .wish-layout {
+        flex-direction: column;
+    }
+    
+    .wish-sidebar {
+        width: 100%;
+        min-width: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-right: none;
+        border-bottom: 1px solid rgba(160, 110, 255, 0.15);
+    }
+    
+    .wish-sidebar .title-block {
+        display: none;
+    }
+    
+    .wish-sidebar .banner-selector-desktop {
+        display: none !important;
+    }
+    
+    .wish-buttons-col {
+        flex-direction: row;
+        width: auto;
+    }
+    
+    .wish-btn {
+        width: auto;
+        padding: 8px 14px;
+        font-size: 13px;
+        letter-spacing: 2px;
+    }
+    
+    .add-gems-btn {
+        width: auto;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    
+    .wish-sidebar .gems-display {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 16px;
+    }
+    
+    /* Карусель */
+    .banner-carousel {
+        display: flex;
+        padding: 6px 12px;
+    }
+    
+    .carousel-dots {
+        display: flex;
+    }
+    
+    /* Баннер */
+    .wish-main {
+        flex: 1;
+        padding: 0;
+        flex-direction: column;
+    }
+    
+    .banner-fullscreen {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .banner-label {
+        bottom: 10px;
+        font-size: 14px;
+        letter-spacing: 4px;
+    }
+}
+
+/* ========== АНИМАЦИЯ ПАДАЮЩЕЙ ЗВЕЗДЫ ========== */
+
+.wish-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 0, 15, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInOverlay 0.2s ease;
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; backdrop-filter: blur(0px); }
+    to { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+.falling-star-container {
+    position: relative;
+    text-align: center;
+}
+
+.falling-star {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    --star-color: #ffd700;
+    --trail-color: #ffaa00;
+    --glow-color: rgba(255, 215, 0, 0.8);
+}
+
+@keyframes starFall {
+    0% {
+        transform: translateY(-40vh) scale(0.2);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    60% {
+        transform: translateY(10vh) scale(1.1);
+    }
+    80% {
+        transform: translateY(5vh) scale(0.95);
+    }
+    100% {
+        transform: translateY(0vh) scale(1);
+        opacity: 1;
+    }
+}
+
+.star-core {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    color: var(--star-color);
+    text-shadow: 0 0 30px var(--glow-color);
+    animation: starPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 20px var(--glow-color); }
+    50% { transform: scale(1.1); text-shadow: 0 0 40px var(--glow-color); }
+}
+
+.star-trail {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--trail-color));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(4px);
+    animation: trailFade 0.6s ease-out forwards;
+}
+
+@keyframes trailFade {
+    from { opacity: 0.8; height: 120px; }
+    to { opacity: 0; height: 200px; }
+}
+
+.star-rarity-hint {
+    margin-top: 30px;
+    font-size: 24px;
+    letter-spacing: 8px;
+    font-weight: bold;
+    animation: rarityPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes rarityPulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Вспышка для 5★ */
+@keyframes flashFade {
+    0% { opacity: 1; background-color: rgba(255, 215, 0, 0.5); }
+    100% { opacity: 0; background-color: rgba(255, 215, 0, 0); }
+}
+
+/* Анимация появления результата */
+@keyframes revealResult {
+    from { 
+        transform: scale(0.5);
+        opacity: 0;
+        filter: blur(10px);
+    }
+    to { 
+        transform: scale(1);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+.result-reveal {
+    animation: revealResult 0.4s ease-out;
+}
+
+.multi-item {
+    animation: revealResult 0.25s ease-out both;
+}
+
+/* Плавное появление элементов с задержкой */
+@keyframes fadeInItem {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Мобильная адаптация анимации */
+@media (max-width: 700px) {
+    .falling-star {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .star-core {
+        font-size: 48px;
+    }
+    
+    .star-rarity-hint {
+        font-size: 18px;
+        letter-spacing: 5px;
+        margin-top: 20px;
     }
 }

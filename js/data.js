@@ -7,19 +7,19 @@ const ALL_FIVE_STARS = [
     { id: '5-5', name: 'Лишайник', rarity: 5, img: 'assets/characters/lish.png' },
     { id: '5-6', name: 'Шэнон', rarity: 5, img: 'assets/characters/shenon.png' },
     { id: '5-7', name: 'Мису', rarity: 5, img: 'assets/characters/misy.png' },
-    { id: '5-8', name: 'Лихуа', rarity: 5, img: 'assets/characters/lih.png' },
+    { id: '5-8', name: 'Амос', rarity: 5, img: 'assets/characters/lih.png' },
 ];
 
 // Все 4★ персонажи
 const ALL_FOUR_STARS = [
-    { id: '4-1', name: 'Рыцарь', rarity: 4 },
-    { id: '4-2', name: 'Лучница', rarity: 4 },
-    { id: '4-3', name: 'Маг', rarity: 4 },
-    { id: '4-4', name: 'Ассасин', rarity: 4 },
-    { id: '4-5', name: 'Бард', rarity: 4 },
-    { id: '4-6', name: 'Кузнец', rarity: 4 },
-    { id: '4-7', name: 'Жрица', rarity: 4 },
-    { id: '4-8', name: 'Странник', rarity: 4 },
+    { id: '4-1', name: 'Камалия', rarity: 4 },
+    { id: '4-2', name: 'Эйфория', rarity: 4 },
+    { id: '4-3', name: 'Ди', rarity: 4 },
+    { id: '4-4', name: 'Ноши', rarity: 4 },
+    { id: '4-5', name: 'Мавалур', rarity: 4 },
+    { id: '4-6', name: 'Гуашко', rarity: 4 },
+    { id: '4-7', name: 'Ян', rarity: 4 },
+    { id: '4-8', name: 'Папая', rarity: 4 },
 ];
 
 // 3★ предметы
